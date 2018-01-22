@@ -1,3 +1,7 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 Project(CUDA_Freshman CXX C CUDA)
-add_subdirectory(1_0_hello_world)
+include_directories(./include)
+add_subdirectory(0_hello_world)
+add_subdirectory(1_check_dimension)
+add_subdirectory(2_grid_block)
+add_subdirectory(3_sum_arrays)
