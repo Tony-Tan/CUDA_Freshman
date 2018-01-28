@@ -1,0 +1,1 @@
+add_executable(sum_arrays_timer sum_arrays_timer.cu)

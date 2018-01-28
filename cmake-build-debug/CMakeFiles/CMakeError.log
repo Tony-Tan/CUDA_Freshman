@@ -1,0 +1,18 @@
+Compiling the CUDA compiler identification source file "CMakeCUDACompilerId.cu" failed.
+Compiler: CMAKE_CUDA_COMPILER-NOTFOUND 
+Build flags: 
+Id flags:  -v;--keep;--keep-dir;tmp
+
+The output was:
+No such file or directory
+
+
+Compiling the CUDA compiler identification source file "CMakeCUDACompilerId.cu" failed.
+Compiler: CMAKE_CUDA_COMPILER-NOTFOUND 
+Build flags: 
+Id flags:  -v;--keep;--keep-dir;tmp
+
+The output was:
+No such file or directory
+
+

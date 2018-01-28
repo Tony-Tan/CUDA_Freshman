@@ -3,6 +3,7 @@
 #include "freshman.h"
 
 
+
 void sumArrays(float * a,float * b,float * res,const int size)
 {
   for(int i=0;i<size;i+=4)
@@ -20,8 +21,8 @@ __global__ void sumArraysGPU(float*a,float*b,float*res)
 }
 int main(int argc,char **argv)
 {
-  int dev = 0;
-  cudaSetDevice(dev);
+  // set up device
+  initDevice(0);
 
   int nElem=32;
   printf("Vector size:%d\n",nElem);
@@ -46,8 +47,13 @@ int main(int argc,char **argv)
 
   dim3 block(nElem);
   dim3 grid(nElem/block.x);
+
+  //timer
+  double iStart,iElaps;
+  iStart=cpuSecond();
   sumArraysGPU<<<grid,block>>>(a_d,b_d,res_d);
-  printf("Execution configuration<<<%d,%d>>>\n",block.x,grid.x);
+  iElaps=cpuSecond()-iStart;
+  printf("Execution configuration<<<%d,%d>>> Time elapsed %f sec\n",block.x,grid.x,iElaps);
 
   CHECK(cudaMemcpy(res_from_gpu_h,res_d,nByte,cudaMemcpyDeviceToHost));
   sumArrays(a_h,b_h,res_h,nElem);
