@@ -14,17 +14,18 @@ void sumArrays(float * a,float * b,float * res,const int size)
     res[i+3]=a[i+3]+b[i+3];
   }
 }
-__global__ void sumArraysGPU(float*a,float*b,float*res)
+__global__ void sumArraysGPU(float*a,float*b,float*res,int N)
 {
-  int i=threadIdx.x;
-  res[i]=a[i]+b[i];
+  int i=blockIdx.x*blockDim.x+threadIdx.x;
+  if(i < N)
+    res[i]=a[i]+b[i];
 }
 int main(int argc,char **argv)
 {
   // set up device
   initDevice(0);
 
-  int nElem=32;
+  int nElem=1<<24;
   printf("Vector size:%d\n",nElem);
   int nByte=sizeof(float)*nElem;
   float *a_h=(float*)malloc(nByte);
@@ -45,13 +46,14 @@ int main(int argc,char **argv)
   CHECK(cudaMemcpy(a_d,a_h,nByte,cudaMemcpyHostToDevice));
   CHECK(cudaMemcpy(b_d,b_h,nByte,cudaMemcpyHostToDevice));
 
-  dim3 block(nElem);
-  dim3 grid(nElem/block.x);
+  dim3 block(512);
+  dim3 grid((nElem-1)/block.x+1);
 
   //timer
   double iStart,iElaps;
   iStart=cpuSecond();
-  sumArraysGPU<<<grid,block>>>(a_d,b_d,res_d);
+  sumArraysGPU<<<grid,block>>>(a_d,b_d,res_d,nElem);
+  cudaDeviceSynchronize();
   iElaps=cpuSecond()-iStart;
   printf("Execution configuration<<<%d,%d>>> Time elapsed %f sec\n",grid.x,block.x,iElaps);
 

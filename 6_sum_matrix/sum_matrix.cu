@@ -16,10 +16,28 @@ void sumMatrix2D_CPU(float * MatA,float * MatB,float * MatC,int nx,int ny)
     b+=nx;
     a+=nx;
   }
-
-
 }
-__global__ void sumMatrix2D(float * MatA,float * MatB,float * MatC,int nx,int ny)
+__global__ void sumMatrix2DB_2DG(float * MatA,float * MatB,float * MatC,int nx,int ny)
+{
+    int ix=threadIdx.x+blockDim.x*blockIdx.x;
+    int iy=threadIdx.y+blockDim.y*blockIdx.y;
+    int idx=ix+iy*ny;
+    if (ix<nx && iy<ny)
+    {
+      MatC[idx]=MatA[idx]+MatB[idx];
+    }
+}
+__global__ void sumMatrix1DB_1DG(float * MatA,float * MatB,float * MatC,int nx,int ny)
+{
+    int ix=threadIdx.x+blockDim.x*blockIdx.x;
+    int iy=threadIdx.y+blockDim.y*blockIdx.y;
+    int idx=ix+iy*ny;
+    if (ix<nx && iy<ny)
+    {
+      MatC[idx]=MatA[idx]+MatB[idx];
+    }
+}
+__global__ void sumMatrix1DB_2DG(float * MatA,float * MatB,float * MatC,int nx,int ny)
 {
     int ix=threadIdx.x+blockDim.x*blockIdx.x;
     int iy=threadIdx.y+blockDim.y*blockIdx.y;
@@ -63,7 +81,7 @@ int main(int argc,char** argv)
   dim3 block(dimx,dimy);
   dim3 grid((nx-1)/block.x+1,(ny-1)/block.y+1);
   double iStart=cpuSecond();
-  sumMatrix2D<<<grid,block>>>(A_dev,B_dev,C_dev,nx,ny);
+  sumMatrix2DB_2DG<<<grid,block>>>(A_dev,B_dev,C_dev,nx,ny);
 
   CHECK(cudaDeviceSynchronize());
   double iElaps=cpuSecond()-iStart;
