@@ -76,6 +76,7 @@ int main(int argc,char** argv)
   iElaps=cpuSecond()-iStart;
   printf("GPU Execution configuration<<<(%d,%d),(%d,%d)>>> Time elapsed %f sec\n",
         grid_0.x,grid_0.y,block_0.x,block_0.y,iElaps);
+  CHECK(cudaMemcpy(C_from_gpu,C_dev,nBytes,cudaMemcpyDeviceToHost));
   checkResult(C_host,C_from_gpu,nxy);
   // 1d block and 1d grid
   dimx=32;
@@ -87,6 +88,7 @@ int main(int argc,char** argv)
   iElaps=cpuSecond()-iStart;
   printf("GPU Execution configuration<<<(%d,%d),(%d,%d)>>> Time elapsed %f sec\n",
         grid_1.x,grid_1.y,block_1.x,block_1.y,iElaps);
+  CHECK(cudaMemcpy(C_from_gpu,C_dev,nBytes,cudaMemcpyDeviceToHost));
   checkResult(C_host,C_from_gpu,nxy);
   // 2d block and 1d grid
   dimx=32;
@@ -98,6 +100,7 @@ int main(int argc,char** argv)
   iElaps=cpuSecond()-iStart;
   printf("GPU Execution configuration<<<(%d,%d),(%d,%d)>>> Time elapsed %f sec\n",
         grid_2.x,grid_2.y,block_2.x,block_2.y,iElaps);
+  CHECK(cudaMemcpy(C_from_gpu,C_dev,nBytes,cudaMemcpyDeviceToHost));
   checkResult(C_host,C_from_gpu,nxy);
 
 
