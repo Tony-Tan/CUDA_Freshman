@@ -33,8 +33,8 @@ int main(int argc,char** argv)
         runtimeVersion/1000,(runtimeVersion%100)/10);
     printf("  CUDA Capability Major/Minor version number:   %d.%d\n",
         deviceProp.major,deviceProp.minor);
-    printf("  Total amount of global memory:                %.2f MBytes (%llu bytes)\n",
-            (float)deviceProp.totalGlobalMem/pow(1024.0,3));
+    printf("  Total amount of global memory:                %.2f GBytes (%llu bytes)\n",
+            (float)deviceProp.totalGlobalMem/pow(1024.0,3),deviceProp.totalGlobalMem);
     printf("  GPU Clock rate:                               %.0f MHz (%0.2f GHz)\n",
             deviceProp.clockRate*1e-3f,deviceProp.clockRate*1e-6f);
     printf("  Memory Bus width:                             %d-bits\n",
