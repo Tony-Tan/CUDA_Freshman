@@ -13,12 +13,12 @@
 
 
 #include <time.h>
-#ifdef WIN32
-#include <windows.h>
+#ifdef _WIN32
+#	include <windows.h>
 #else
-#  include <sys/time.h>
+#	include <sys/time.h>
 #endif
-#ifdef WIN32
+#ifdef _WIN32
 int gettimeofday(struct timeval *tp, void *tzp)
 {
   time_t clock;
@@ -53,6 +53,15 @@ void initialData(float* ip,int size)
   {
     ip[i]=(float)(rand()&0xffff)/1000.0f;
   }
+}
+void initialData_int(int* ip, int size)
+{
+	time_t t;
+	srand((unsigned)time(&t));
+	for (int i = 0; i<size; i++)
+	{
+		ip[i] = int(rand()&0xff);
+	}
 }
 void printMatrix(float * C,const int nx,const int ny)
 {
