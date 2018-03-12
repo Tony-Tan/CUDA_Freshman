@@ -75,10 +75,10 @@ int main(int argc,char** argv)
 {
 	initDevice(0);
 	
-	bool bResult = false;
+	
 	//initialization
 
-	int size = 1 << 24;
+	int size = 1 << 26;
 	printf("	with array size %d  ", size);
 
 	//execution configuration
@@ -102,7 +102,7 @@ int main(int argc,char** argv)
 
 	memcpy(tmp, idata_host, bytes);
 	double iStart, iElaps;
-	int gpu_sum = 0;
+	long long int gpu_sum = 0;
 
 	// device memory
 	int * idata_dev = NULL;
@@ -113,9 +113,9 @@ int main(int argc,char** argv)
 	//cpu reduction
 
 	iStart = cpuSecond();
-	int cpu_sum = recursiveReduce(tmp, size);
+	long long int cpu_sum = recursiveReduce(tmp, size);
 	iElaps = cpuSecond() - iStart;
-	printf("cpu reduce              elapsed %lf ms cpu_sum:	%d\n", iElaps, cpu_sum);
+	printf("cpu reduce				elapsed %lf ms cpu_sum:	%lld\n", iElaps, cpu_sum);
 
 
 	//kernel 1:reduceNeighbored
@@ -130,7 +130,7 @@ int main(int argc,char** argv)
 	gpu_sum = 0;
 	for (int i = 0; i < grid.x; i++)
 		gpu_sum += odata_host[i];
-	printf("gpu warmup			    elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+	printf("gpu warmup				elapsed %lf ms gpu_sum: %lld<<<grid %d block %d>>>\n",
 		iElaps, gpu_sum, grid.x, block.x);
 
 	//kernel 1:reduceNeighbored
@@ -145,7 +145,7 @@ int main(int argc,char** argv)
 	gpu_sum = 0;
 	for (int i = 0; i < grid.x; i++)
 		gpu_sum += odata_host[i];
-	printf("gpu reduceNeighbored   elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+	printf("gpu reduceNeighbored			elapsed %lf ms gpu_sum: %lld<<<grid %d block %d>>>\n",
 		iElaps, gpu_sum, grid.x, block.x);
 
 	// free host memory
