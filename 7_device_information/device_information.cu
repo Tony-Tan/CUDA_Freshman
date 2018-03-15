@@ -69,5 +69,20 @@ int main(int argc,char** argv)
 	    deviceProp.maxGridSize[1],
 	    deviceProp.maxGridSize[2]);
     printf("  Maximu memory pitch                           %lu bytes\n",deviceProp.memPitch);
-    exit(EXIT_SUCCESS);
+    printf("----------------------------------------------------------\n");
+    printf("Number of multiprocessors:                      %d\n", deviceProp.multiProcessorCount);
+    printf("Total amount of constant memory:                %4.2f KB\n",
+	deviceProp.totalConstMem/1024.0);
+    printf("Total amount of shared memory per block:        %4.2f KB\n",
+     deviceProp.sharedMemPerBlock/1024.0);
+    printf("Total number of registers available per block:  %d\n",
+    deviceProp.regsPerBlock);
+    printf("Warp size                                       %d\n", deviceProp.warpSize);
+    printf("Maximum number of threads per block:            %d\n", deviceProp.maxThreadsPerBlock);
+    printf("Maximum number of threads per multiprocessor:  %d\n",
+	deviceProp.maxThreadsPerMultiProcessor);
+    printf("Maximum number of warps per multiprocessor:     %d\n",
+	deviceProp.maxThreadsPerMultiProcessor/32);
+    return EXIT_SUCCESS;
+   exit(EXIT_SUCCESS);
 }
