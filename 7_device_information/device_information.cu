@@ -84,5 +84,5 @@ int main(int argc,char** argv)
     printf("Maximum number of warps per multiprocessor:     %d\n",
 	deviceProp.maxThreadsPerMultiProcessor/32);
     return EXIT_SUCCESS;
-   exit(EXIT_SUCCESS);
+   
 }
