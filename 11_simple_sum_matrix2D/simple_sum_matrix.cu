@@ -77,7 +77,7 @@ int main(int argc,char** argv)
   printf("GPU Execution configuration<<<(%d,%d),(%d,%d)>>> Time elapsed %f sec\n",
         grid.x,grid.y,block.x,block.y,iElaps);
   CHECK(cudaMemcpy(C_from_gpu,C_dev,nBytes,cudaMemcpyDeviceToHost));
-  checkResult(C_host,C_from_gpu,nxy);
+  //checkResult(C_host,C_from_gpu,nxy);
 
   cudaFree(A_dev);
   cudaFree(B_dev);
