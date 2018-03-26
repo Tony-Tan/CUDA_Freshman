@@ -32,8 +32,8 @@ int main(int argc,char** argv)
 {
   //printf("strating...\n");
   //initDevice(0);
-  int nx=1<<14;
-  int ny=1<<14;
+  int nx=1<<12;
+  int ny=1<<12;
   int nxy=nx*ny;
   int nBytes=nxy*sizeof(float);
 
