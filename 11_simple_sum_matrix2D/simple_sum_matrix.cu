@@ -30,8 +30,8 @@ __global__ void sumMatrix(float * MatA,float * MatB,float * MatC,int nx,int ny)
 
 int main(int argc,char** argv)
 {
-  printf("strating...\n");
-  initDevice(0);
+  //printf("strating...\n");
+  //initDevice(0);
   int nx=1<<7;
   int ny=1<<7;
   int nxy=nx*ny;
@@ -60,8 +60,9 @@ int main(int argc,char** argv)
   int dimx=argc>2?atoi(argv[1]):32;
   int dimy=argc>2?atoi(argv[2]):32;
 
-  // cpu compute
+
   cudaMemcpy(C_from_gpu,C_dev,nBytes,cudaMemcpyDeviceToHost);
+  // cpu compute
   double iStart=cpuSecond();
   sumMatrix2D_CPU(A_host,B_host,C_host,nx,ny);
   double iElaps=cpuSecond()-iStart;
