@@ -60,7 +60,7 @@ int main(int argc,char** argv)
   int dimx=argc>2?atoi(argv[1]):32;
   int dimy=argc>2?atoi(argv[2]):32;
 
-
+  double iStart,iElaps;
   // cpu compute
   //double iStart=cpuSecond();
   //sumMatrix2D_CPU(A_host,B_host,C_host,nx,ny);
