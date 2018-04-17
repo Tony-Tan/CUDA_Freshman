@@ -163,9 +163,9 @@ int main(int argc,char** argv)
 	//cpu_sum = recursiveReduce(tmp, size);
 	for (int i = 0; i < size; i++)
 		cpu_sum += tmp[i];
-	printf("%d ", cpu_sum);
+	printf("cpu sum:%d \n", cpu_sum);
 	iElaps = cpuSecond() - iStart;
-	printf("cpu reduce              elapsed %lf ms cpu_sum:	%d\n", iElaps, cpu_sum);
+	printf("cpu reduce                 elapsed %lf ms cpu_sum: %d\n", iElaps, cpu_sum);
 
 
 	//kernel 1:reduceNeighbored
@@ -180,7 +180,7 @@ int main(int argc,char** argv)
 	gpu_sum = 0;
 	for (int i = 0; i < grid.x; i++)
 		gpu_sum += odata_host[i];
-	printf("gpu warmup			    elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+	printf("gpu warmup                 elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
 		iElaps, gpu_sum, grid.x, block.x);
 
 	//kernel 1:reduceNeighbored
@@ -195,7 +195,7 @@ int main(int argc,char** argv)
 	gpu_sum = 0;
 	for (int i = 0; i < grid.x; i++)
 		gpu_sum += odata_host[i];
-	printf("gpu reduceNeighbored   elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+	printf("gpu reduceNeighbored       elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
 		iElaps, gpu_sum, grid.x, block.x);
 
 	//kernel 2:reduceNeighboredLess
@@ -224,7 +224,7 @@ int main(int argc,char** argv)
 	gpu_sum = 0;
 	for (int i = 0; i < grid.x; i++)
 		gpu_sum += odata_host[i];
-	printf("gpu reduceInterleaved   elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+	printf("gpu reduceInterleaved      elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
 		iElaps, gpu_sum, grid.x, block.x);
 	// free host memory
 

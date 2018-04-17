@@ -94,9 +94,9 @@ void checkResult(float * hostRef,float * gpuRef,const int N)
   {
     if(abs(hostRef[i]-gpuRef[i])>epsilon)
     {
-      printf("Results don\'t match!");
-      printf("%f(hostRef[%d] )!= %f(gpuRef[%d])",hostRef[i],i,gpuRef[i],i);
-      break;
+      printf("Results don\'t match!\n");
+      printf("%f(hostRef[%d] )!= %f(gpuRef[%d])\n",hostRef[i],i,gpuRef[i],i);
+      return;
     }
   }
   printf("Check result success!\n");

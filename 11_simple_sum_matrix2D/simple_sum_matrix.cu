@@ -32,8 +32,8 @@ int main(int argc,char** argv)
 {
   //printf("strating...\n");
   //initDevice(0);
-  int nx=1<<12;
-  int ny=1<<12;
+  int nx=1<<13;
+  int ny=1<<13;
   int nxy=nx*ny;
   int nBytes=nxy*sizeof(float);
 
@@ -62,10 +62,18 @@ int main(int argc,char** argv)
 
   double iStart,iElaps;
   // cpu compute
-  //double iStart=cpuSecond();
-  //sumMatrix2D_CPU(A_host,B_host,C_host,nx,ny);
-  //double iElaps=cpuSecond()-iStart;
-  //printf("CPU Execution Time elapsed %f sec\n",iElaps);
+   iStart=cpuSecond();
+  sumMatrix2D_CPU(A_host,B_host,C_host,nx,ny);
+  iElaps=cpuSecond()-iStart;
+  printf("CPU Execution Time elapsed %f sec\n",iElaps);
+  //warm up
+  // 2d block and 2d grid
+  dim3 block_0(32,32);
+  dim3 grid_0((nx-1)/block_0.x+1,(ny-1)/block_0.y+1);
+  iStart=cpuSecond();
+  sumMatrix<<<grid_0,block_0>>>(A_dev,B_dev,C_dev,nx,ny);
+  CHECK(cudaDeviceSynchronize());
+  printf("Warm Up \n");
 
   // 2d block and 2d grid
   dim3 block(dimx,dimy);
@@ -77,7 +85,8 @@ int main(int argc,char** argv)
   printf("GPU Execution configuration<<<(%d,%d),(%d,%d)>>> Time elapsed %f sec\n",
         grid.x,grid.y,block.x,block.y,iElaps);
   CHECK(cudaMemcpy(C_from_gpu,C_dev,nBytes,cudaMemcpyDeviceToHost));
-  //checkResult(C_host,C_from_gpu,nxy);
+
+  checkResult(C_host,C_from_gpu,nxy);
 
   cudaFree(A_dev);
   cudaFree(B_dev);
