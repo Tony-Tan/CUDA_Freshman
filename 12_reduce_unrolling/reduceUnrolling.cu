@@ -81,6 +81,79 @@ __global__ void reduceUnroll2(int * g_idata,int * g_odata,unsigned int n)
 //
 //
 //
+__global__ void reduceUnroll4(int * g_idata,int * g_odata,unsigned int n)
+{
+	//set thread ID
+	unsigned int tid = threadIdx.x;
+	unsigned int idx = blockDim.x*blockIdx.x*4+threadIdx.x;
+	//boundary check
+	if (tid >= n) return;
+	//convert global data pointer to the
+	int *idata = g_idata + blockIdx.x*blockDim.x*4;
+	if(idx+blockDim.x<n)
+	{
+		g_idata[idx]+=g_idata[idx+blockDim.x];
+		g_idata[idx]+=g_idata[idx+blockDim.x*2];
+		g_idata[idx]+=g_idata[idx+blockDim.x*3];
+	}
+	__syncthreads();
+	//in-place reduction in global memory
+	for (int stride = blockDim.x/2; stride>0 ; stride >>=1)
+	{
+		if (tid <stride)
+		{
+			idata[tid] += idata[tid + stride];
+		}
+		//synchronize within block
+		__syncthreads();
+	}
+	//write result for this block to global mem
+	if (tid == 0)
+		g_odata[blockIdx.x] = idata[0];
+
+}
+//
+//
+//
+__global__ void reduceUnroll8(int * g_idata,int * g_odata,unsigned int n)
+{
+	//set thread ID
+	unsigned int tid = threadIdx.x;
+	unsigned int idx = blockDim.x*blockIdx.x*8+threadIdx.x;
+	//boundary check
+	if (tid >= n) return;
+	//convert global data pointer to the
+	int *idata = g_idata + blockIdx.x*blockDim.x*8;
+	if(idx+blockDim.x<n)
+	{
+		g_idata[idx]+=g_idata[idx+blockDim.x];
+		g_idata[idx]+=g_idata[idx+blockDim.x*2];
+		g_idata[idx]+=g_idata[idx+blockDim.x*3];
+		g_idata[idx]+=g_idata[idx+blockDim.x*4];
+		g_idata[idx]+=g_idata[idx+blockDim.x*5];
+		g_idata[idx]+=g_idata[idx+blockDim.x*6];
+		g_idata[idx]+=g_idata[idx+blockDim.x*7];
+
+	}
+	__syncthreads();
+	//in-place reduction in global memory
+	for (int stride = blockDim.x/2; stride>0 ; stride >>=1)
+	{
+		if (tid <stride)
+		{
+			idata[tid] += idata[tid + stride];
+		}
+		//synchronize within block
+		__syncthreads();
+	}
+	//write result for this block to global mem
+	if (tid == 0)
+		g_odata[blockIdx.x] = idata[0];
+
+}
+//
+//
+//
 __global__ void reduceUnrollWarp8(int * g_idata,int * g_odata,unsigned int n)
 {
 	//set thread ID
@@ -320,6 +393,32 @@ int main(int argc,char** argv)
 	printf("reduceUnrolling2            elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
 		iElaps, gpu_sum, grid.x/2, block.x);
 
+	//kernel 1.1:reduceUnrolling4
+	CHECK(cudaMemcpy(idata_dev, idata_host, bytes, cudaMemcpyHostToDevice));
+	CHECK(cudaDeviceSynchronize());
+	iStart = cpuSecond();
+	reduceUnroll4 <<<grid.x/4, block >>>(idata_dev, odata_dev, size);
+	cudaDeviceSynchronize();
+	iElaps = cpuSecond() - iStart;
+	cudaMemcpy(odata_host, odata_dev, grid.x * sizeof(int), cudaMemcpyDeviceToHost);
+	gpu_sum = 0;
+	for (int i = 0; i < grid.x/4; i++)
+		gpu_sum += odata_host[i];
+	printf("reduceUnrolling4            elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+		iElaps, gpu_sum, grid.x/4, block.x);
+	//kernel 1.2:reduceUnrolling8
+	CHECK(cudaMemcpy(idata_dev, idata_host, bytes, cudaMemcpyHostToDevice));
+	CHECK(cudaDeviceSynchronize());
+	iStart = cpuSecond();
+	reduceUnroll8 <<<grid.x/8, block >>>(idata_dev, odata_dev, size);
+	cudaDeviceSynchronize();
+	iElaps = cpuSecond() - iStart;
+	cudaMemcpy(odata_host, odata_dev, grid.x * sizeof(int), cudaMemcpyDeviceToHost);
+	gpu_sum = 0;
+	for (int i = 0; i < grid.x/8; i++)
+		gpu_sum += odata_host[i];
+	printf("reduceUnrolling8            elapsed %lf ms gpu_sum: %d<<<grid %d block %d>>>\n",
+		iElaps, gpu_sum, grid.x/8, block.x);
 
 	//kernel 2:reduceUnrollingWarp8
 	CHECK(cudaMemcpy(idata_dev, idata_host, bytes, cudaMemcpyHostToDevice));
