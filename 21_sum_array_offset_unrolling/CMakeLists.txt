@@ -1,0 +1,1 @@
+add_executable(sum_array_offset_unrolling sum_array_offset_unrolling.cu)
