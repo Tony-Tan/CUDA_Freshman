@@ -1,0 +1,1 @@
+add_executable(sum_arrays_uniform_memory sum_arrays_uniform_memory.cu)

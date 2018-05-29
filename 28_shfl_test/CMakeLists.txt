@@ -1,0 +1,1 @@
+add_executable(shfl_test shfl_test.cu)
