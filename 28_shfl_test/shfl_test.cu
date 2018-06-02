@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "freshman.h"
 #define BDIM 16
+#define SEGM 4
 __global__ void test_shfl_broadcast(int *in,int*out,int const srcLans)
 {
     int value=in[threadIdx.x];
@@ -41,7 +42,7 @@ __global__ void test_shfl_xor(int *in,int*out,int const mask)
     out[threadIdx.x]=value;
 
 }
-#define SEGM 4
+
 __global__ void test_shfl_xor_array(int *in,int*out,int const mask)
 {
     int idx=threadIdx.x*SEGM;
@@ -52,6 +53,37 @@ __global__ void test_shfl_xor_array(int *in,int*out,int const mask)
     value[1]=__shfl_xor(value[1],mask,BDIM);
     value[2]=__shfl_xor(value[2],mask,BDIM);
     value[3]=__shfl_xor(value[3],mask,BDIM);
+    for(int i=0;i<SEGM;i++)
+        out[idx+i]=value[i];
+
+}
+__inline__ __device__
+void swap(int *value,int laneIdx,int mask,int firstIdx,int secondIdx)
+{
+    bool pred=((laneIdx%(2))==0);
+    if(pred)
+    {
+        int tmp=value[firstIdx];
+        value[firstIdx]=value[secondIdx];
+        value[secondIdx]=tmp;
+
+    }
+    value[secondIdx]=__shfl_xor(value[secondIdx],mask,BDIM);
+    if(pred)
+    {
+        int tmp=value[firstIdx];
+        value[firstIdx]=value[secondIdx];
+        value[secondIdx]=tmp;
+    }
+}
+
+__global__ void test_shfl_swap(int *in,int* out,int const mask,int firstIdx,int secondIdx)
+{
+    int idx=threadIdx.x*SEGM;
+    int value[SEGM];
+    for(int i=0;i<SEGM;i++)
+        value[i]=in[idx+i];
+    swap(value,threadIdx.x,mask,firstIdx,secondIdx);
     for(int i=0;i<SEGM;i++)
         out[idx+i]=value[i];
 
@@ -69,9 +101,10 @@ int main(int argc,char** argv)
         kernel_num=atoi(argv[1]);
 
     //Malloc
-    int * in_host=(int*)malloc(nBytes);
+    //int * in_host=(int*)malloc(nBytes);
+    int in_host[]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     int * out_gpu=(int*)malloc(nBytes);
-    initialData_int(in_host,data_size);
+    //initialData_int(in_host,data_size);
 
     //cudaMalloc
     int * in_dev=NULL;
@@ -109,8 +142,14 @@ int main(int argc,char** argv)
             printf("test_shfl_xor\n");
             break;
         case 5:
-            test_shfl_xor_array<<<grid,block.x/SEGM>>>(in_dev,out_dev,1);
+            test_shfl_xor_array<<<1,block.x/SEGM>>>(in_dev,out_dev,1);
             printf("test_shfl_xor_array\n");
+            break;
+        case 6:
+            test_shfl_swap<<<1,block.x/SEGM>>>(in_dev,out_dev,1,0,3);
+            printf("test_shfl_swap\n");
+            break;
+        default:
             break;
     }
     CHECK(cudaMemcpy(out_gpu,out_dev,nBytes,cudaMemcpyDeviceToHost));
@@ -129,7 +168,7 @@ int main(int argc,char** argv)
     cudaFree(in_dev);
     cudaFree(out_dev);
     free(out_gpu);
-    free(in_host);
+    //free(in_host);
     cudaDeviceReset();
     return 0;
 }
