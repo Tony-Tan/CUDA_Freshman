@@ -7,7 +7,7 @@
 #define BDIMX_RECT 32
 #define BDIMY_RECT 16
 #define IPAD 1
-__global__ void setRowReadRow(float * out)
+__global__ void warmup(int * out)
 {
     __shared__ int tile[BDIMY][BDIMX];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -16,7 +16,16 @@ __global__ void setRowReadRow(float * out)
     __syncthreads();
     out[idx]=tile[threadIdx.y][threadIdx.x];
 }
-__global__ void setColReadCol(float * out)
+__global__ void setRowReadRow(int * out)
+{
+    __shared__ int tile[BDIMY][BDIMX];
+    unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
+
+    tile[threadIdx.y][threadIdx.x]=idx;
+    __syncthreads();
+    out[idx]=tile[threadIdx.y][threadIdx.x];
+}
+__global__ void setColReadCol(int * out)
 {
     __shared__ int tile[BDIMY][BDIMX];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -25,7 +34,7 @@ __global__ void setColReadCol(float * out)
     __syncthreads();
     out[idx]=tile[threadIdx.x][threadIdx.y];
 }
-__global__ void setColReadRow(float * out)
+__global__ void setColReadRow(int * out)
 {
     __shared__ int tile[BDIMY][BDIMX];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -34,7 +43,7 @@ __global__ void setColReadRow(float * out)
     __syncthreads();
     out[idx]=tile[threadIdx.y][threadIdx.x];
 }
-__global__ void setRowReadCol(float * out)
+__global__ void setRowReadCol(int * out)
 {
     __shared__ int tile[BDIMY][BDIMX];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -43,7 +52,7 @@ __global__ void setRowReadCol(float * out)
     __syncthreads();
     out[idx]=tile[threadIdx.x][threadIdx.y];
 }
-__global__ void setRowReadColDyn(float * out)
+__global__ void setRowReadColDyn(int * out)
 {
     extern __shared__ int tile[];
     unsigned int row_idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -52,7 +61,7 @@ __global__ void setRowReadColDyn(float * out)
     __syncthreads();
     out[row_idx]=tile[col_idx];
 }
-__global__ void setRowReadColIpad(float * out)
+__global__ void setRowReadColIpad(int * out)
 {
     __shared__ int tile[BDIMY][BDIMX+IPAD];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -61,7 +70,7 @@ __global__ void setRowReadColIpad(float * out)
     __syncthreads();
     out[idx]=tile[threadIdx.x][threadIdx.y];
 }
-__global__ void setRowReadColDynIpad(float * out)
+__global__ void setRowReadColDynIpad(int * out)
 {
     extern __shared__ int tile[];
     unsigned int row_idx=threadIdx.y*(blockDim.x+1)+threadIdx.x;
@@ -71,7 +80,7 @@ __global__ void setRowReadColDynIpad(float * out)
     out[row_idx]=tile[col_idx];
 }
 //--------------------rectagle---------------------
-__global__ void setRowReadColRect(float * out)
+__global__ void setRowReadColRect(int * out)
 {
     __shared__ int tile[BDIMY_RECT][BDIMX_RECT];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -81,7 +90,7 @@ __global__ void setRowReadColRect(float * out)
     __syncthreads();
     out[idx]=tile[icol][irow];
 }
-__global__ void setRowReadColRectDyn(float * out)
+__global__ void setRowReadColRectDyn(int * out)
 {
     extern __shared__ int tile[];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -92,9 +101,9 @@ __global__ void setRowReadColRectDyn(float * out)
     __syncthreads();
     out[idx]=tile[col_idx];
 }
-__global__ void setRowReadColRectPad(float * out)
+__global__ void setRowReadColRectPad(int * out)
 {
-    __shared__ int tile[BDIMY_RECT][BDIMX_RECT+IPAD];
+    __shared__ int tile[BDIMY_RECT][BDIMX_RECT+IPAD*2];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
     unsigned int icol=idx%blockDim.y;
     unsigned int irow=idx/blockDim.y;
@@ -102,7 +111,7 @@ __global__ void setRowReadColRectPad(float * out)
     __syncthreads();
     out[idx]=tile[icol][irow];
 }
-__global__ void setRowReadColRectDynPad(float * out)
+__global__ void setRowReadColRectDynPad(int * out)
 {
     extern __shared__ int tile[];
     unsigned int idx=threadIdx.y*blockDim.x+threadIdx.x;
@@ -123,60 +132,166 @@ int main(int argc,char **argv)
     kernel=atoi(argv[1]);
   int nElem=BDIMX*BDIMY;
   printf("Vector size:%d\n",nElem);
-  int nByte=sizeof(float)*nElem;
-  float *res_from_device=(float*)malloc(nByte);
-  memset(res_from_device,0,nByte);
-  float * out;
-  CHECK(cudaMalloc((float**)&out,nByte));
+  int nByte=sizeof(int)*nElem;
+  int * out;
+  CHECK(cudaMalloc((int**)&out,nByte));
+  cudaSharedMemConfig MemConfig;
+  CHECK(cudaDeviceGetSharedMemConfig(&MemConfig));
+  printf("--------------------------------------------\n");
+  switch (MemConfig) {
 
+      case cudaSharedMemBankSizeFourByte:
+        printf("the device is cudaSharedMemBankSizeFourByte: 4-Byte\n");
+      break;
+      case cudaSharedMemBankSizeEightByte:
+        printf("the device is cudaSharedMemBankSizeEightByte: 8-Byte\n");
+      break;
 
+  }
+  printf("--------------------------------------------\n");
   dim3 block(BDIMY,BDIMX);
   dim3 grid(1,1);
-  dim3 block_rect(BDIMY_RECT,BDIMX_RECT);
+  dim3 block_rect(BDIMX_RECT,BDIMY_RECT);
   dim3 grid_rect(1,1);
+  warmup<<<grid,block>>>(out);
+  printf("warmup!\n");
   double iStart,iElaps;
   iStart=cpuSecond();
   switch(kernel)
   {
       case 0:
-      setRowReadRow<<<grid,block>>>(out);
-      break;
-      case 1:
-      setColReadCol<<<grid,block>>>(out);
-      break;
+          {
+          setRowReadRow<<<grid,block>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadRow  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+      //break;
+      //case 1:
+          iStart=cpuSecond();
+          setColReadCol<<<grid,block>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setColReadCol  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+        }
       case 2:
-      setColReadRow<<<grid,block>>>(out);
-      break;
+        {
+          setColReadRow<<<grid,block>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setColReadRow  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+        }
       case 3:
-      setRowReadCol<<<grid,block>>>(out);
-      break;
+      {
+          setRowReadCol<<<grid,block>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadCol  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
       case 4:
-      setRowReadColDyn<<<grid,block,(BDIMX)*BDIMY*sizeof(float)>>>(out);
-      break;
+      {
+            setRowReadColDyn<<<grid,block,(BDIMX)*BDIMY*sizeof(int)>>>(out);
+            cudaDeviceSynchronize();
+            iElaps=cpuSecond()-iStart;
+            printf("setRowReadColDyn  ");
+            printf("Execution Time elapsed %f sec\n",iElaps);
+            break;
+        }
       case 5:
-      setRowReadColIpad<<<grid,block>>>(out);
-      break;
+      {
+          setRowReadColIpad<<<grid,block>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadColIpad  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
       case 6:
-      setRowReadColDynIpad<<<grid,block,(BDIMX+IPAD)*BDIMY*sizeof(float)>>>(out);
-      break;
+      {
+          setRowReadColDynIpad<<<grid,block,(BDIMX+IPAD)*BDIMY*sizeof(int)>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadColDynIpad  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
       case 7:
-      setRowReadColRect<<<grid_rect,block_rect>>>(out);
-      break;
+      {
+          setRowReadColRect<<<grid_rect,block_rect>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadColRect  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
       case 8:
-      setRowReadColRectDyn<<<grid_rect,block_rect,(BDIMX)*BDIMY*sizeof(float)>>>(out);
-      break;
+      {
+          setRowReadColRectDyn<<<grid_rect,block_rect,(BDIMX)*BDIMY*sizeof(int)>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadColRectDyn  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
       case 9:
-      setRowReadColRectPad<<<grid_rect,block_rect>>>(out);
-      break;
+      {
+          setRowReadColRectPad<<<grid_rect,block_rect>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadColRectPad  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
       case 10:
-      setRowReadColRectDynPad<<<grid_rect,block_rect,(BDIMX+1)*BDIMY*sizeof(float)>>>(out);
-      break;
+      {
+          setRowReadColRectDynPad<<<grid_rect,block_rect,(BDIMX+1)*BDIMY*sizeof(int)>>>(out);
+          cudaDeviceSynchronize();
+          iElaps=cpuSecond()-iStart;
+          printf("setRowReadColRectDynPad  ");
+          printf("Execution Time elapsed %f sec\n",iElaps);
+          break;
+      }
+      case 11:
+      {
+            setRowReadRow<<<grid,block>>>(out);
+            cudaDeviceSynchronize();
+
+            setColReadCol<<<grid,block>>>(out);
+            cudaDeviceSynchronize();
+
+            setColReadRow<<<grid,block>>>(out);
+            cudaDeviceSynchronize();
+
+            setRowReadCol<<<grid,block>>>(out);
+            cudaDeviceSynchronize();
+
+            setRowReadColDyn<<<grid,block,(BDIMX)*BDIMY*sizeof(int)>>>(out);
+            cudaDeviceSynchronize();
+
+            setRowReadColIpad<<<grid,block>>>(out);
+            cudaDeviceSynchronize();
+
+            setRowReadColDynIpad<<<grid,block,(BDIMX+IPAD)*BDIMY*sizeof(int)>>>(out);
+            cudaDeviceSynchronize();
+            break;
+    }
+    case 12:
+    {
+        setRowReadColRect<<<grid_rect,block_rect>>>(out);
+        setRowReadColRectDyn<<<grid_rect,block_rect,(BDIMX)*BDIMY*sizeof(int)>>>(out);
+        setRowReadColRectPad<<<grid_rect,block_rect>>>(out);
+        setRowReadColRectDynPad<<<grid_rect,block_rect,(BDIMX+1)*BDIMY*sizeof(int)>>>(out);
+        break;
+    }
 
   }
-  iElaps=cpuSecond()-iStart;
-  printf("Execution Time elapsed %f sec\n",iElaps);
-  CHECK(cudaMemcpy(res_from_device,out,nByte,cudaMemcpyDeviceToHost));
+
   cudaFree(out);
-  free(res_from_device);
   return 0;
 }
