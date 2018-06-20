@@ -50,7 +50,7 @@ __global__ void stencil_1d(float * in,float * out)
     //printf("%d:GPU :%lf,\n",idx,temp);
 }
 //read only
-__global__ void stencil_1d(float * in,float * out,const float* __restrict__ dcoef)
+__global__ void stencil_1d_readonly(float * in,float * out,const float* __restrict__ dcoef)
 {
     __shared__ float smem[BDIM+2*TEMP_RADIO_SIZE];
     int idx=threadIdx.x+blockDim.x*blockIdx.x;
@@ -123,7 +123,7 @@ int main(int argc,char** argv)
     stencil_1d<<<grid,block>>>(in_dev,out_dev);
     CHECK(cudaDeviceSynchronize());
     iElaps=cpuSecond()-iStart;
-    printf(" Time elapsed %f sec\n",iElaps);
+    printf("stencil_1d Time elapsed %f sec\n",iElaps);
     CHECK(cudaMemcpy(out_gpu,out_dev,nBytes,cudaMemcpyDeviceToHost));
     checkResult(out_cpu,out_gpu,nxy);
     CHECK(cudaMemset(out_dev,0,nBytes));
@@ -131,10 +131,10 @@ int main(int argc,char** argv)
     float * dcoef_ro;
     CHECK(cudaMalloc((void**)&dcoef_ro,TEMP_RADIO_SIZE * sizeof(float)));
     CHECK(cudaMemcpy(dcoef_ro,templ_,TEMP_RADIO_SIZE * sizeof(float),cudaMemcpyHostToDevice));
-    stencil_1d<<<grid,block>>>(in_dev,out_dev,dcoef_ro);
+    stencil_1d_readonly<<<grid,block>>>(in_dev,out_dev,dcoef_ro);
     CHECK(cudaDeviceSynchronize());
     iElaps=cpuSecond()-iStart;
-    printf(" Time elapsed %f sec\n",iElaps);
+    printf("stencil_1d_readonly Time elapsed %f sec\n",iElaps);
     CHECK(cudaMemcpy(out_gpu,out_dev,nBytes,cudaMemcpyDeviceToHost));
     checkResult(out_cpu,out_gpu,nxy);
 

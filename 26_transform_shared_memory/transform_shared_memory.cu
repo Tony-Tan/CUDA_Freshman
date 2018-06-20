@@ -1,9 +1,9 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include "freshman.h"
-#define BDIMX 32
-#define BDIMY 16
-#define IPAD 1
+#define BDIMX 8
+#define BDIMY 8
+#define IPAD 2
 //cpu transform
 void transformMatrix2D_CPU(float * in,float * out,int nx,int ny)
 {
@@ -14,6 +14,16 @@ void transformMatrix2D_CPU(float * in,float * out,int nx,int ny)
       out[i*nx+j]=in[j*nx+i];
     }
   }
+}
+__global__ void warmup(float * in,float * out,int nx,int ny)
+{
+    int ix=threadIdx.x+blockDim.x*blockIdx.x;
+    int iy=threadIdx.y+blockDim.y*blockIdx.y;
+    int idx=ix+iy*nx;
+    if (ix<nx && iy<ny)
+    {
+      out[idx]=in[idx];
+    }
 }
 __global__ void copyRow(float * in,float * out,int nx,int ny)
 {
@@ -127,6 +137,7 @@ __global__ void transformSmemUnrollPad(float * in,float* out,int nx,int ny)
 		tile[row_idx+BDIMX]=in[transform_in_idx+BDIMX];
 		__syncthreads();
 		unsigned int col_idx=icol*(blockDim.x*2+IPAD)+irow;
+        out[transform_out_idx]=tile[col_idx];
 		out[transform_out_idx+ny*BDIMX]=tile[col_idx+BDIMX];
 
 	}
@@ -159,6 +170,7 @@ int main(int argc,char** argv)
 
   //Malloc
   float* A_host=(float*)malloc(nBytes);
+  float* B_host_cpu=(float*)malloc(nBytes);
   float* B_host=(float*)malloc(nBytes);
   initialData(A_host,nxy);
 
@@ -175,7 +187,7 @@ int main(int argc,char** argv)
 
   // cpu compute
   double iStart=cpuSecond();
-  transformMatrix2D_CPU(A_host,B_host,nx,ny);
+  transformMatrix2D_CPU(A_host,B_host_cpu,nx,ny);
   double iElaps=cpuSecond()-iStart;
   printf("CPU Execution Time elapsed %f sec\n",iElaps);
 
@@ -184,23 +196,31 @@ int main(int argc,char** argv)
   dim3 grid((nx-1)/block.x+1,(ny-1)/block.y+1);
   dim3 block_1(dimx,dimy);
   dim3 grid_1((nx-1)/(block_1.x*2)+1,(ny-1)/block_1.y+1);
+  //warmup
+  warmup<<<grid,block>>>(A_dev,B_dev,nx,ny);
+  CHECK(cudaDeviceSynchronize());
   iStart=cpuSecond();
   switch(transform_kernel)
   {
   case 0:
 	    copyRow<<<grid,block>>>(A_dev,B_dev,nx,ny);
+        printf("copyRow ");
 	    break;
   case 1:
 	    transformNaiveRow<<<grid,block>>>(A_dev,B_dev,nx,ny);
+        printf("transformNaiveRow ");
 	    break;
   case 2:
   		transformSmem<<<grid,block>>>(A_dev,B_dev,nx,ny);
+        printf("transformSmem ");
 		break;
   case 3:
 		transformSmemPad<<<grid,block>>>(A_dev,B_dev,nx,ny);
+        printf("transformSmemPad ");
 		break;
   case 4:
         transformSmemUnrollPad<<<grid_1,block_1>>>(A_dev,B_dev,nx,ny);
+        printf("transformSmemUnrollPad ");
         break;
   default:
     break;
@@ -209,12 +229,13 @@ int main(int argc,char** argv)
   iElaps=cpuSecond()-iStart;
   printf(" Time elapsed %f sec\n",iElaps);
   CHECK(cudaMemcpy(B_host,B_dev,nBytes,cudaMemcpyDeviceToHost));
-  checkResult(B_host,B_host,nxy);
+  checkResult(B_host,B_host_cpu,nxy);
 
   cudaFree(A_dev);
   cudaFree(B_dev);
   free(A_host);
   free(B_host);
+  free(B_host_cpu);
   cudaDeviceReset();
   return 0;
 }

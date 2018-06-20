@@ -63,7 +63,6 @@ __global__ void reduceGmem(int * g_idata,int * g_odata,unsigned int n)
 	//convert global data pointer to the
 	int *idata = g_idata + blockIdx.x*blockDim.x;
 
-	__syncthreads();
 	//in-place reduction in global memory
 	if(blockDim.x>=1024 && tid <512)
 		idata[tid]+=idata[tid+512];
