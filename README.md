@@ -3,7 +3,9 @@
 2. Some of them are from the book "Professional CUDA C Programming"
 3. The others are coded by myself
 4. You can get more details from the website [www.face2ai.com](http://www.face2ai.com)
-
+## 联系我
+![](./IMG_9066.JPG)
+## 博客
 具体内容可以访问博客：
 - [0.0 腾讯云CUDA环境搭建](http://www.face2ai.com/CUDA-F-0-0-Tencent-GPU-Cloud/)
 - [1.0 并行计算与计算机架构](http://www.face2ai.com/CUDA-F-1-0-并行计算与计算机架构/)
