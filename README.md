@@ -1,8 +1,6 @@
-# CUDA Freshman
-1. This project is a set of CUDA programs
-2. Some of them are from the book "Professional CUDA C Programming"
-3. The others are coded by myself
-4. You can get more details from the website [www.face2ai.com](http://www.face2ai.com)
+## CUDA 学习和博客
+大家好，虽然这个cuda学习项目已经很久了，但是持续有同学添加微信和star本项目，目前本人工作内容偏向控制和强化学习，所以不会使用到cuda，但做事情不能虎头蛇尾，决定重新更新项目并制作相关教学视频，请关注本人b站账户：[https://space.bilibili.com/81228819](https://space.bilibili.com/81228819) , cuda，强化学习相关视频将会在近期更新，您的关注是我更新的动力
+
 ## 联系我
 ![](./IMG_9066.JPG)
 ## 博客
@@ -41,3 +39,10 @@
 - [6.3 重叠内核执行和数据传输](http://www.face2ai.com/CUDA-F-6-3-重叠内核执行和数据传输/)
 - [6.4 重叠GPU和CPU的执行](http://www.face2ai.com/CUDA-F-6-4-重叠GPU和CPU的执行/)
 - [6.5 流回调](http://www.face2ai.com/CUDA-F-6-5-流回调/)
+
+
+## CUDA Freshman
+1. This project is a set of CUDA programs
+2. Some of them are from the book "Professional CUDA C Programming"
+3. The others are coded by myself
+4. You can get more details from the website [www.face2ai.com](http://www.face2ai.com)
